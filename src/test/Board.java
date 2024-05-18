@@ -7,6 +7,7 @@ public class Board {
 private static final int BOARD_SIZE = 15;
 
     private Tile[][] gameBoard;
+    private int[][] bonusGameBoard;
     private boolean isEmpty;
 
     private static Board board = null;
@@ -29,6 +30,45 @@ private static final int BOARD_SIZE = 15;
                 this.gameBoard[row][col] = null;
             }
         }
+
+        // Bonus Board Initialization  
+        // 1 -normal ,2 - double letter score , 3 - triple letter score, 22 - double word score , 33- triple word score
+        this.bonusGameBoard = new int[15][15];
+        for (int i = 0; i < 15; i++) {
+            for (int j = 0; j < 15; j++) {
+                this.bonusGameBoard[i][j] = 1;
+            }
+        }
+
+        //33
+        bonusGameBoard[0][0]= 33 ;  bonusGameBoard[0][7] = 33; bonusGameBoard[0][14]= 33;
+        bonusGameBoard[7][0]= 33; bonusGameBoard[7][14]= 33;
+        bonusGameBoard[14][0]= 33; bonusGameBoard[14][7]= 33; bonusGameBoard[14][14]= 33;
+
+        //22
+        for (int i=1; i<14;i++){
+            if (i == 5){
+                i = 10;
+            }
+            bonusGameBoard[i][i] = 22; bonusGameBoard[i][14-i] = 22;
+        }
+
+        // 2
+        bonusGameBoard[0][3]= 2; bonusGameBoard[0][11]= 2;
+        bonusGameBoard[2][6]= 2; bonusGameBoard[2][8]= 2;
+        bonusGameBoard[3][0]= 2; bonusGameBoard[3][7]= 2; bonusGameBoard[3][14]= 2;
+        bonusGameBoard[6][2]= 2; bonusGameBoard[6][6]= 2; bonusGameBoard[6][8]= 2; bonusGameBoard[6][12]= 2;
+        bonusGameBoard[7][3]= 2; bonusGameBoard[7][11]= 2;
+        bonusGameBoard[8][2]= 2; bonusGameBoard[8][6]= 2; bonusGameBoard[8][8]= 2; bonusGameBoard[8][12]= 2;
+        bonusGameBoard[11][0]= 2; bonusGameBoard[11][7]= 2; bonusGameBoard[11][14]= 2;
+        bonusGameBoard[12][6]= 2; bonusGameBoard[12][8]= 2;
+        bonusGameBoard[14][3]= 2; bonusGameBoard[14][11]= 2;
+
+        // 3
+        bonusGameBoard[1][5]= 3; bonusGameBoard[1][9]= 3;
+        bonusGameBoard[5][1]= 3; bonusGameBoard[5][5]= 3; bonusGameBoard[5][9]= 3; bonusGameBoard[5][13]= 3;
+        bonusGameBoard[9][1]= 3; bonusGameBoard[9][5]= 3; bonusGameBoard[9][9]= 3; bonusGameBoard[9][13]= 3;
+        bonusGameBoard[13][5]= 3; bonusGameBoard[13][9]= 3;
     }
 
     public boolean isEmpty() {
@@ -263,65 +303,98 @@ private static final int BOARD_SIZE = 15;
     }
 
     public int getScore(Word word) {
-        int[][] triple_word_score = {
-            {0, 0},  // Row 0, Column 0
-            {0, 7}, {0, 14},
-            {7, 0}, {7, 14},
-            {14, 0}, {14, 7}, {14, 14}
-        };
-
-        int[][] triple_letter_score = {
-            {1, 5}, {1, 9},
-            {5, 1}, {5, 5}, {5, 9}, {5, 13},
-            {9, 1}, {9, 5}, {9, 9}, {9, 13},
-            {13, 5}, {13, 9}
-        };
-
-        int[][] double_word_score = {
-            {1, 1}, {1, 13}, {1, 12}, {1, 11}, {1, 10},
-            {2, 2},
-            {3, 3},
-            {4, 4},
-            {10, 4}, {10, 10},
-            {11, 3}, {11, 11},
-            {12, 2}, {12, 12},
-            {13, 1}, {13, 13}
-        };
-        
-        int[][] double_letter_score = {
-            {0, 3}, {0, 11},
-            {2, 6}, {2, 8},
-            {3, 0}, {3, 7}, {3, 14},
-            {6, 2}, {6, 6}, {6, 8}, {6, 12},
-            {7, 3}, {7, 11},
-            {8, 2}, {8, 6}, {8, 8}, {8, 12},
-            {11, 0}, {11, 7}, {11, 14},
-            {12, 6}, {12, 8},
-            {14, 3}, {14, 11}
-        };
-        
         int basic_score = 0;
+        int bonus = 0;
         Tile[] tiles_of_word = word.getTiles();
         Bag bag = Bag.getBag();
         Tile[] tiles_scores = bag.getTiles();
 
-        // basic score
-        for (int tile_word = 0; tile_word < tiles_of_word.length; tile_word++) {
-            for (int tile_letter = 0; tile_letter < tiles_scores.length; tile_letter++) {
-                if (tiles_of_word[tile_word].equals(tiles_scores[tile_letter])) {
-                    basic_score += tiles_scores[tile_letter].score;
+        for (int tile_word = 0; tile_word < tiles_of_word.length; tile_word++) { 
+            for (int tile_letter = 0; tile_letter < tiles_scores.length; tile_letter++) { 
+                if (tiles_of_word[tile_word].equals(tiles_scores[tile_letter])) { 
+                    basic_score += tiles_scores[tile_letter].score; 
                 }
             }
         }
 
-        // bonus score
-        int bonus_score = 0;
         int row = word.getRow();
-        int col = word.getCol(); 
+        int col = word.getCol();
+        boolean wordDoubleBonus = false;
+        boolean wordTripleBonus = false;
+        int index = 0;
+        
+        if (word.isVertical()) {
+            for (int i = row; i < row+word.getTiles().length; i++) {
+                bonus = bonusGameBoard[i][col]; 
+                
+                if (bonus == 2) {
+                    basic_score = basic_score + word.getTiles()[index].score;
+                }
+
+                if (bonus == 3) {
+                    basic_score = basic_score + word.getTiles()[index].score * 2;
+                }
+
+                if (bonus == 22) {
+                    wordDoubleBonus = true;
+                }
+        
+                if (bonus == 33) {
+                    wordTripleBonus = true;
+                }
+                index++;
+            }
+        }
+        else {
+            for (int i = col; i < col+word.getTiles().length; i++) {
+                bonus = bonusGameBoard[row][i];
+
+                if (bonus == 2) {
+                    basic_score = basic_score + word.getTiles()[index].score;
+                }
+
+                if (bonus == 3) {
+                    basic_score = basic_score + word.getTiles()[index].score * 2;
+                }
+
+                if (bonus == 22) {
+                    wordDoubleBonus = true;
+                }
+        
+                if (bonus == 33) {
+                    wordTripleBonus = true;
+                }
+
+                index++;
+            }
+        }
+
+        if (wordDoubleBonus) {
+            basic_score = basic_score * 2;
+        }
+
+        if (wordTripleBonus) {
+            basic_score = basic_score * 3;
+        }
 
         return basic_score;
 
     }
-}
 
-// /Users/amitmaz/Downloads/assignment/Assigment/src
+    public static void main(String[] args) {
+        Board board = Board.getBoard();
+
+        Tile.Bag bag = Tile.Bag.getBag();
+
+        Tile[] tiles = new Tile[]{
+            bag.getTile('A'),
+            bag.getTile('B'),
+            bag.getTile('C'),
+            bag.getTile('D')
+        };
+        Word word = new Word(tiles, 0 , 0 , false); 
+        
+        int score = board.getScore(word);
+        System.out.println("Score for the word : " + score);
+    }
+}
