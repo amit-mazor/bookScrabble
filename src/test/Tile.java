@@ -1,4 +1,5 @@
 package test;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Tile {
@@ -42,6 +43,11 @@ public class Tile {
             return false;
         }
         return this.score == other.score;
+    }
+
+    @Override
+    public String toString() {
+        return "Tile [letter=" + letter + ", score=" + score + "]";
     }
 
     public static class Bag {
@@ -121,7 +127,6 @@ public class Tile {
                     break;
                 }
             }
-            System.out.println("No more " + letterToGrab);
             return null;
         }
 
@@ -130,11 +135,13 @@ public class Tile {
             int index = theLetter - 'A'; // Converts to num which is the index in the array
 
             if (this.letterCounts[index] < LETTERS_COUNT[index]) {
-                System.out.println("Inserting the letter: " + theLetter);
                 this.letterCounts[index] += 1;
-            } else {
-                System.out.println("No more available slots for tile " + theLetter);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Bag [letterCounts=" + Arrays.toString(letterCounts) + ", tiles=" + Arrays.toString(tiles) + "]";
         }
 
         public int size() {

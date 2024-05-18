@@ -1,6 +1,7 @@
 package test;
 
 import java.util.ArrayList;
+import javax.swing.border.SoftBevelBorder;
 import test.Tile.Bag;
 
 public class Board {
@@ -71,6 +72,38 @@ private static final int BOARD_SIZE = 15;
         bonusGameBoard[13][5]= 3; bonusGameBoard[13][9]= 3;
     }
 
+    public void setEmpty(boolean isEmpty) {
+        this.isEmpty = isEmpty;
+    }
+
+    public void print() {
+        for (int i=0; i < BOARD_SIZE + 1; i++) {
+            for (int j=0; j < BOARD_SIZE + 1; j++) {
+                if (i == 0) {
+                    if (j > 10) {
+                        System.out.print(" " + (j - 1) + " ");
+                    } else {
+                        System.out.print(" " + (j - 1) + " ");
+                    }
+                } else if (j == 0) {
+                    if (i > 10) {
+                        System.out.print(" " + (i - 1) + " ");
+                    } else {
+                        System.out.print(" " + (i - 1) + "  ");   
+                    }
+                } else if (getBoard().gameBoard[i - 1][j - 1] == null) {
+                    System.out.print(" _ ");
+                } else {
+                    System.out.print(" " + getBoard().gameBoard[i - 1][j - 1].getLetter() + " ");
+                }
+                
+            }
+            System.out.println("");
+        }
+        System.out.println("");
+        System.out.println("");
+    }
+
     public boolean isEmpty() {
         return isEmpty;
     }
@@ -85,63 +118,78 @@ private static final int BOARD_SIZE = 15;
         return newCopy;
     }
 
-    public boolean boardLegal(Word word) {
-        
-        // Check if the word is inside the board 
+    // isInsideBoard 
+    // gets a word and checks whether its fully inside the board or not.
+    private boolean isInsideBoard(Word word) {
         boolean placement_ok = false;
-        if (word.getRow() <= BOARD_SIZE && word.getCol() <= BOARD_SIZE) {
+        if (0 <= word.getRow() && word.getRow() <= BOARD_SIZE && 0 <= word.getCol() && word.getCol() <= BOARD_SIZE) {
             if (word.isVertical()) {
                 if (word.getRow() + word.getTiles().length <= BOARD_SIZE) {
-                    placement_ok = true;
+                    return true;
                 }
             }
             else if (word.getCol() + word.getTiles().length <= BOARD_SIZE) {
-                placement_ok = true;
+                return true;
             }
         }
 
-        if (!placement_ok) {
+        return false;
+    }
+
+    // isOnCenter
+    // gets a location on the board and checks if it's the center of the board.
+    private static boolean isOnCenter(int row, int col) {
+        if (row == (BOARD_SIZE / 2) && col == (BOARD_SIZE / 2)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean boardLegal(Word word) {
+        // Check if the word is inside the board 
+        if (!getBoard().isInsideBoard(word)) {
             return false;
         }
 
-        // Check if there is an overlap
-        boolean overlap = false;
-        boolean isOnStar = false;
+        // Check for overlap of a tile
+        // Check if it's on the star (for the first word only)
         Tile[][] tiles_of_board = getBoard().getTiles();
         Tile[] tiles_of_word = word.getTiles();
+
+        boolean isOverlap = false;
+        boolean isOnStar = false;
         int i = 0;
 
         if (word.isVertical()) {
             int upperRow = word.getRow() - 1;
             int downerRow = word.getRow() + tiles_of_word.length + 1;
             if (upperRow >= 0 && tiles_of_board[upperRow][word.getCol()] != null) {
-                overlap = true;
+                isOverlap = true;
             } else if (downerRow < tiles_of_board.length && tiles_of_board[downerRow][word.getCol()] != null) {
-                overlap = true;
+                isOverlap = true;
             }
 
-            for (int row = word.getRow(); row < word.getRow() + tiles_of_word.length && !overlap; row++) {
-                if (row == (BOARD_SIZE / 2) + 1 && word.getCol() == (BOARD_SIZE / 2) + 1) {
+            for (int row = word.getRow(); row < word.getRow() + tiles_of_word.length; row++) {
+                if (isOnCenter(row, word.getCol())) {
                     isOnStar = true;
                 }
 
-                if (tiles_of_board[row][word.getCol()].equals(tiles_of_word[i])) {
-                    overlap = true;
-                    break;
-                } else if (tiles_of_board[row][word.getCol()] != null) {
-                    return false;
+                if (tiles_of_board[row][word.getCol()] != null) {
+                    if (tiles_of_word[i] == null) {
+                        isOverlap = true;
+                    } else {
+                        return false;
+                    }
                 }
 
                 int rightCol = word.getCol() + 1;
                 if (rightCol < tiles_of_board[0].length && tiles_of_board[row][rightCol] != null) {
-                    overlap = true;
-                    break;
+                    isOverlap = true;
                 }
 
                 int leftCol = word.getCol() - 1;
                 if (leftCol >= 0 && tiles_of_board[row][leftCol] != null) {
-                    overlap = true;
-                    break;
+                    isOverlap = true;
                 }
 
                 i++;
@@ -151,33 +199,33 @@ private static final int BOARD_SIZE = 15;
             int rightCol = word.getCol() + tiles_of_word.length + 1;
             int leftCol = word.getCol() - 1;
             if (leftCol >= 0 && tiles_of_board[word.getRow()][leftCol] != null) {
-                overlap = true;
+                isOverlap = true;
             } else if (rightCol < tiles_of_board[0].length && tiles_of_board[word.getRow()][rightCol] != null) {
-                overlap = true;
+                isOverlap = true;
             }
 
-            for (int col = word.getCol(); col < word.getCol() + tiles_of_word.length && !overlap; col++) {
-                if (word.getRow() == (BOARD_SIZE / 2) + 1 && col == (BOARD_SIZE / 2) + 1) {
+            for (int col = word.getCol(); col < word.getCol() + tiles_of_word.length; col++) {
+                if (isOnCenter(word.getRow(), col)) {
                     isOnStar = true;
                 }
 
-                if (tiles_of_board[word.getRow()][col].equals(tiles_of_word[i])) {
-                    overlap = true;
-                    break;
-                } else if (tiles_of_board[word.getRow()][col] != null) {
-                    return false;
+                if (tiles_of_board[word.getRow()][col] != null) {
+                    if (tiles_of_word[i] == null) {
+                        isOverlap = true;
+                    } else {
+                        System.out.println("BAD: Tile:" + tiles_of_board[word.getRow()][col].toString() + ", WORD: " + word.toString());
+                        return false;
+                    }
                 }
 
                 int upperRow = word.getRow() - 1;
                 if (upperRow >= 0 && tiles_of_board[upperRow][col] != null) {
-                    overlap = true;
-                    break;
+                    isOverlap = true;
                 }
 
                 int downerRow = word.getRow() + word.getTiles().length + 1;
                 if (downerRow < tiles_of_board.length && tiles_of_board[downerRow][col] != null) {
-                    overlap = true;
-                    break;
+                    isOverlap = true;
                 }
 
                 i++;
@@ -188,15 +236,14 @@ private static final int BOARD_SIZE = 15;
             if (!isOnStar) {
                 return false;
             } else {
-                getBoard().isEmpty = false;
                 return true;
             }
         }
         
-        return overlap;
+        return isOverlap;
     }
 
-    public boolean dictionaryLegal() {
+    public boolean dictionaryLegal(Word word) {
         return true;
     }
 
@@ -311,7 +358,7 @@ private static final int BOARD_SIZE = 15;
 
         for (int tile_word = 0; tile_word < tiles_of_word.length; tile_word++) { 
             for (int tile_letter = 0; tile_letter < tiles_scores.length; tile_letter++) { 
-                if (tiles_of_word[tile_word].equals(tiles_scores[tile_letter])) { 
+                if (tiles_of_word[tile_word] != null && tiles_of_word[tile_word].equals(tiles_scores[tile_letter])) { 
                     basic_score += tiles_scores[tile_letter].score; 
                 }
             }
@@ -327,6 +374,10 @@ private static final int BOARD_SIZE = 15;
             for (int i = row; i < row+word.getTiles().length; i++) {
                 bonus = bonusGameBoard[i][col]; 
                 
+                if (i == (BOARD_SIZE / 2) && col == (BOARD_SIZE / 2)) {
+                    wordDoubleBonus = true;
+                }
+
                 if (bonus == 2) {
                     basic_score = basic_score + word.getTiles()[index].score;
                 }
@@ -348,6 +399,10 @@ private static final int BOARD_SIZE = 15;
         else {
             for (int i = col; i < col+word.getTiles().length; i++) {
                 bonus = bonusGameBoard[row][i];
+
+                if (row == (BOARD_SIZE / 2) && i == (BOARD_SIZE / 2)) {
+                    wordDoubleBonus = true;
+                }
 
                 if (bonus == 2) {
                     basic_score = basic_score + word.getTiles()[index].score;
@@ -381,20 +436,100 @@ private static final int BOARD_SIZE = 15;
 
     }
 
-    public static void main(String[] args) {
-        Board board = Board.getBoard();
-
-        Tile.Bag bag = Tile.Bag.getBag();
-
-        Tile[] tiles = new Tile[]{
-            bag.getTile('A'),
-            bag.getTile('B'),
-            bag.getTile('C'),
-            bag.getTile('D')
-        };
-        Word word = new Word(tiles, 0 , 0 , false); 
+    public int tryPlaceWord(Word word) {
+        if (!(boardLegal(word))) {
+            System.out.println("ILLEGAL WORD: " + word.toString());
+            return 0;
+        }
         
-        int score = board.getScore(word);
-        System.out.println("Score for the word : " + score);
+        if (!(dictionaryLegal(word))) {
+            System.out.println("ILLEGAL DICT: " + word.toString());
+            return 0;
+        }
+    
+        ArrayList<Word> allWords = getWords(word);
+        for (Word w : allWords) {
+            if (!(dictionaryLegal(w))) {
+                System.out.println("ILLEGAL OTHER W: " + w.toString());
+                return 0;
+            }
+        }
+
+        for (int row = word.getRow(), col = word.getCol(), index = 0;
+        (index < word.getTiles().length); index++) {
+
+            if (getBoard().gameBoard[row][col] == null) {
+                getBoard().gameBoard[row][col] = word.getTiles()[index];
+            }
+
+            if (word.isVertical()) {
+                row++;
+            } else {
+                col++;
+            }
+        }
+
+        int score_total = 0;
+        for (Word w : allWords) {
+            score_total =+ getScore(w);
+        }
+
+        getBoard().setEmpty(false);
+        return score_total;
+    }
+
+
+
+    public static void main(String[] args) {
+        Board b = Board.getBoard();
+		if(b!=Board.getBoard())
+			System.out.println("board should be a Singleton (-5)");
+		
+		
+		Bag bag = Bag.getBag();
+		Tile[] ts=new Tile[10];
+		for(int i=0;i<ts.length;i++) 
+			ts[i]=bag.getRand();
+		
+		// Word w0=new Word(ts,0,6,true);
+		// Word w1=new Word(ts,7,6,false);
+		// Word w2=new Word(ts,6,7,true);
+		// Word w3=new Word(ts,-1,7,true);
+		// Word w4=new Word(ts,7,-1,false);
+		// Word w5=new Word(ts,0,7,true);
+		// Word w6=new Word(ts,7,0,false);
+		
+        // if(b.boardLegal(w0) || b.boardLegal(w1) || b.boardLegal(w2) || b.boardLegal(w3) || b.boardLegal(w4) || !b.boardLegal(w5) || !b.boardLegal(w6))
+        //     System.out.println("your boardLegal function is wrong (-10)");
+
+        for(Tile t : ts)
+			bag.put(t);
+
+        Word horn = new Word(get("HORN"), 7, 5, false);
+        if(b.tryPlaceWord(horn)!=14)
+            System.out.println("problem in placeWord for 1st word (-10)");
+
+        getBoard().print();
+        
+        Word farm=new Word(get("FA_M"), 5, 7, true);
+        if(b.tryPlaceWord(farm)!=9)
+            System.out.println("problem in placeWord for 2ed word (-10): ");
+
+        getBoard().print();
+
+        Word paste=new Word(get("PASTE"), 9, 5, false);
+        int score = b.tryPlaceWord(paste);
+		if(score!=25)
+			System.out.println("problem in placeWord for 3ed word (-10): " + score);
+    }
+
+    private static Tile[] get(String s) {
+        Tile[] ts=new Tile[s.length()];
+        int i=0;
+        for(char c: s.toCharArray()) {
+            ts[i]=Bag.getBag().getTile(c);
+            i++;
+        }
+        return ts;
     }
 }

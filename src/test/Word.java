@@ -8,6 +8,12 @@ public class Word {
     private final int col;
     private final boolean vertical; // is the word written from up to down ? it not, then its from left to right
 
+    @Override
+    public String toString() {
+        return "Word [tiles=" + Arrays.toString(tiles) + ", row=" + row + ", col=" + col + ", vertical=" + vertical
+                + "]";
+    }
+
     public Word(Tile[] tiles, int row, int col, boolean vertical) {
         this.col = col;
         this.row = row;
